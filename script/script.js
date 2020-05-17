@@ -162,6 +162,7 @@ document.addEventListener('DOMContentLoaded', function(){
                 prevButton.classList.add('d-none');
                 nextButton.classList.add('d-none');
                 sendButton.classList.remove('d-none');
+                questionTitle.textContent = '';
                 formAnswers.innerHTML = `
                 <div class="form-group">
                     <label for="numberPhone">Введите номер телефона</label>
@@ -171,6 +172,7 @@ document.addEventListener('DOMContentLoaded', function(){
             }
 
             if(numberQuestion === questions.length + 1){
+                questionTitle.textContent = '';
                 formAnswers.textContent = "Спасибо за пройденный тест!";
                 setTimeout(() => {
                     modalBlock.classList.remove('d-block');
