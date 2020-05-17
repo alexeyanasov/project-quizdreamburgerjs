@@ -1,3 +1,4 @@
+// Обработчик событий, который отслеживает загрузку контента
 document.addEventListener('DOMContentLoaded', function(){
     const btnOpenModal = document.querySelector('#btnOpenModal');
     const modalBlock = document.querySelector('#modalBlock');
@@ -8,6 +9,9 @@ document.addEventListener('DOMContentLoaded', function(){
     const nextButton = document.querySelector('#next');
     const prevButton = document.querySelector('#prev');
 
+    const sendButton = document.querySelector('#send');
+
+    // Объект содержащий вопросы и ответы
     const questions = [
         {
             question: "Какого цвета бургер?",
@@ -83,17 +87,18 @@ document.addEventListener('DOMContentLoaded', function(){
         }
     ];
 
+    // Обработчик события открытия модального окна
     btnOpenModal.addEventListener('click', () => {
         modalBlock.classList.add('d-block');
         playTest();
     });
 
+    // Обработчик события открытия модального окна
     closeModal.addEventListener('click', () => {
         modalBlock.classList.remove('d-block');
     });
-
+    // Обработчик события открытия модального окна (вне кнопки крестик)
     document.addEventListener('click', function(event){
-        // console.log(event.target);
         if(
             !event.target.closest('.modal-dialog') &&
             !event.target.closest('.openModalButton')
@@ -102,18 +107,23 @@ document.addEventListener('DOMContentLoaded', function(){
         }
     });
 
+    // функция начала тестирования
     const playTest = () => {
+        // переменная для ответов
+        const finalAnswers = [];
+        // переменная с номеров вопроса
         let numberQuestion = 0;
+        // функция рендеринга ответов
         const renderAnswers = (index) => {
 
             // Через forEach
             questions[index].answers.forEach((answer, index, arr) => {
                 const answerItem = document.createElement('div');
 
-                answerItem.classList.add('answers-item', 'd-flex', 'flex-column');
+                answerItem.classList.add('answers-item', 'd-flex', 'justify-content-center');
 
                 answerItem.innerHTML = `
-                    <input type="${questions[index].type}" id="${answer.title}" name="answer" class="d-none">
+                    <input type="${questions[index].type}" id="${answer.title}" name="answer" class="d-none" value="${answer.title}">
                     <label for="${answer.title}" class="d-flex flex-column justify-content-between">
                     <img class="answerImg" src="${answer.url}" alt="burger">
                     <span>${answer.title}</span>
@@ -122,57 +132,89 @@ document.addEventListener('DOMContentLoaded', function(){
 
                 formAnswers.appendChild(answerItem);
             })
-
-            // Способ через for
-            // for(i = 0; i < 2; i++){
-            //     const answerItem = document.createElement('div');
-
-            //     answerItem.classList.add('answers-item', 'd-flex', 'flex-column');
-
-            //     answerItem.innerHTML = `
-            //         <input type="radio" id="answerItem1" name="answer" class="d-none">
-            //         <label for="answerItem1" class="d-flex flex-column justify-content-between">
-            //         <img class="answerImg" src="${questions.answers[i].url}" alt="burger">
-            //         <span>${questions.answers[i].title}</span>
-            //         </label>
-            //     `
-
-            //     formAnswers.appendChild(answerItem);
-            // }
         }
+        // функция рендеринга вопросов + ответов
         const renderQuestions = (indexQuestion) => {
             formAnswers.innerHTML = '';
-            // Вызов вопроса
-            questionTitle.textContent = `${questions[indexQuestion].question}`;
-            // Вызов ответов
-            renderAnswers(indexQuestion);
 
-            // formAnswers.innerHTML = `
-            // <div class="answers-item d-flex flex-column">
-            //     <input type="radio" id="answerItem1" name="answer" class="d-none">
-            //     <label for="answerItem1" class="d-flex flex-column justify-content-between">
-            //     <img class="answerImg" src="${questions.answers[0].url}" alt="burger">
-            //     <span>${questions.answers[0].title}</span>
-            //     </label>
-            // </div>
-            // <div class="answers-item d-flex justify-content-center">
-            //     <input type="radio" id="answerItem2" name="answer" class="d-none">
-            //     <label for="answerItem2" class="d-flex flex-column justify-content-between">
-            //     <img class="answerImg" src="./image/burgerBlack.png" alt="burger">
-            //     <span>Черный</span>
-            //     </label>
-            // </div>
-            // `;
+            if(numberQuestion >= 0 && numberQuestion  <= questions.length - 1){
+                // Вызов вопроса
+                questionTitle.textContent = `${questions[indexQuestion].question}`;
+                // Вызов ответов
+                renderAnswers(indexQuestion);
+
+                nextButton.classList.remove('d-none');
+                prevButton.classList.remove('d-none');
+                sendButton.classList.add('d-none');
+            }
+
+            // убирает на первом вопросе кнопку назад
+            if(numberQuestion === 0){
+                prevButton.classList.add('d-none');
+            }
+
+            // убирает на последнем вопросе кнопку далее
+            // if(numberQuestion === questions.length - 1){
+            //     nextButton.classList.add('d-none');
+            // }
+
+            if(numberQuestion === questions.length){
+                prevButton.classList.add('d-none');
+                nextButton.classList.add('d-none');
+                sendButton.classList.remove('d-none');
+                formAnswers.innerHTML = `
+                <div class="form-group">
+                    <label for="numberPhone">Введите номер телефона</label>
+                    <input type="tel" class="form-control" id="numberPhone">
+                </div>
+                `;
+            }
+
+            if(numberQuestion === questions.length + 1){
+                formAnswers.textContent = "Спасибо за пройденный тест!";
+                setTimeout(() => {
+                    modalBlock.classList.remove('d-block');
+                }, 2000);
+            }
         }
+
+        // запуск функции рендеринга
         renderQuestions(numberQuestion);
 
+        const checkAnswer = () => {
+            const obj = {};
+
+            const inputs = [...formAnswers.elements].filter((input) => input.checked || input.id === 'numberPhone');
+            inputs.forEach((input, index) => {
+                if(numberQuestion >= 0 && numberQuestion <= questions.length - 1){
+                    obj[`${index}_${questions[numberQuestion].question}`] = input.value;
+                }
+
+                if(numberQuestion === questions.length){
+                    obj['Номер телефона'] = input.value;
+                }
+            })
+
+            console.log(obj);
+            finalAnswers.push(obj);
+        }
+
+        // обработчик событий кнопок вперед, назад
         nextButton.onclick = () => {
+            checkAnswer();
             numberQuestion++;
             renderQuestions(numberQuestion);
         }
         prevButton.onclick = () => {
             numberQuestion--;
             renderQuestions(numberQuestion);
+        }
+
+        sendButton.onclick = () => {
+            checkAnswer();
+            numberQuestion++;
+            renderQuestions(numberQuestion);
+
         }
 
         
